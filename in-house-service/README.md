@@ -10,7 +10,13 @@
 - 설문투표
 - 통합회계시스템, Web-Fax, 일정관리, Clean Desk 점검, 임직원몰 ID연동, 이름검색
 - 인사관리, 조직관리, 역량관리, 성과관리, 급여관리, 근태관리, 복리후생, 신청결재 등
+- 로컬 AD랑 Azure AD 두가지로 관리하자 
 
+
+## 만들면 좋을 기능 
+- 크래프톤 사내 카페 미리주문 기능
+- 크래프톤 사내 식당 메뉴 조회 기능 및 현재 어느정도 붐비는지확인하는 기능(AI)?
+- 크래프톤 사내 택배 조회 기능 (?)
 
 
 ## 결정해야하는 부분 
@@ -31,6 +37,81 @@
 - SSO는? 
 
 
+## 기술
+
+[azure-graph](https://learn.microsoft.com/ko-kr/azure/developer/java/identity/enable-spring-boot-webapp-authorization-entra-id?tabs=asa)
+로 인사정보연계시스템에 저장후, Azure Active Directory에 저장하기
+
+
+AD와 애저 AD 연결하기
+
+이와 같은 이유를 포함한 여러 이유로, 조직은 하이브리드 IT 환경을 두고 온프레미스 AD의 데이터를 애저 AD에 동기화하는 방법을 택한다. 
+
+마이크로소프트는 이를 위한 두 가지 툴로, Azure AD Connect와 Azure AD Connect cloud sync를 제공
+
+- 하지만, AD를 맥북에 설치 할 수 없어서 AD를 저장하는 식으로 일단 구현해보자
+
+[install utm for install windows server](https://tcsfiles.blob.core.windows.net/documents/AIST3720Notes/InstallUTMonanM1Mac.html)
+
+## AD (Active Directory)란? 
+[AD 참고글](https://blog.naver.com/quest_kor/221487945625)
+
+- 기본적으로 AD는 **사용자**가 **마이크로소프트 IT 환경에서 업무를 수행하는 데 도움을 주는 데이터베이스이자 서비스 집합**입니다.
+
+
+-  데이터베이스(또는 디렉토리)는 환경에 대한 중요한 정보를 담고 있습니다. 
+  - 사용자와 컴퓨터 목록, 누가 무엇을 할 수 있는지에 대한 정보 등이 포함. 
+    - 예를 들어, 데이터베이스에는 100명의 사용자 계정을 각 사용자의 직책, 전화번호, 비밀번호와 같은 세부정보와 함께 리스팅할 수 있습니다. 
+  - 또한, 각 사용자의 권한도 기록합니다. 
+    - 예를 들어, 모든 사용자가 회사 복지 정보를 읽도록 허용하고, 금융 문서는 소수의 사람들만 보거나 수정하도록 허용할 수 있습니다.
+
+
+- 서비스는 IT 환경에서 일어나는 **대부분의 활동을 제어**합니다. 
+  - 특히 서비스는 일반적으로 사용자가 입력하는 사용자 ID와 비밀번호를 확인하는 방법으로, 
+  - 사용자가 주장하는 본인이 맞는지 검증하고(인증), 각기 허용된 데이터에만 액세스할 수 있도록 합니다(인가).
+
+### AD는 어떤 구조로 구성?
+AD에는 크게 
+- 도메인(Domain), 
+- 트리(Trees), 
+- 포레스트(Forests)
+
+의 세 가지 계층이 있습니다. 
+
+- **도메인**은 관련된 사용자, 컴퓨터 및 기타 AD 객체(예를 들어, 회사의 시카고 지사를 위한 모든 AD 객체)로 구성되는 그룹입니다. 
+  - **여러 개의 도메인을 트리로 결합**할 수 있으며, **여러 개의 트리를 포레스트로 그룹화**할 수 있습니다. 
+여기서 중요한 점은 다음과 같습니다.
+- **도메인은 관리 경계**입니다. -> **특정 도메인을 위한 객체는 하나의 데이터베이스에 저장되며 함께 관리**가 가능합니다.
+-  **포레스트는 보안 경계**입니다. -> 서로 다른 포레스트의 객체는 각 포레스트의 관리자가 해당 객체간 신뢰를 형성하지 않는 한 상호 작용할 수 없습니다. 
+  - 예를 들어, 상호 독립된 여러 개의 사업부가 있는 경우 여러 개의 포레스트를 만드는 것이 좋습니다.
+
+
+### AD 데이터베이스 안에는 무엇이 있습니까?
+
+- AD 데이터베이스(디렉토리)에는 **도메인의 AD 객체(AD objects)에 대한 정보가 포함**됩니다. 
+- 보편적인 AD 객체 유형으로는 
+  - 사용자, 
+  - 컴퓨터, 
+  - 애플리케이션, 
+  - 프린터, 
+  - 공유 폴더 등이 있습니다. 
+- 일부 객체는 다른 객체를 포함할 수 있습니다(AD를 ‘계층적’이라고 말하는 이유). 
+- 특히, 앞으로 이어질 글에서는 조직이 AD 객체를 조직 단위(organizational units, OU)로 구성해서 관리를 간소화하고 사용자를 그룹으로 묶어 보안 능률을 높이는 방법을 살펴볼 것입니다. 
+- 이러한 OU와 그룹은 그 자체로 디렉토리에 저장되는 객체입니다.
+
+- 객체에는 특성(attributes)이 있습니다. 
+- 명확하게 드러나는 특성도 있고, 잘 드러나지 않는 특성도 있습니다. 
+  - 예를 들어, 사용자 객체는 일반적으로 그 사람의 **이름, 비밀번호, 부서, 이메일 주소**와 같은 특성 외에 
+  - 고유한 전역 고유 식별자(Gobally Unique Identifier, GUID)와 보안 식별자(Security Identifier, SID), 마지막 로그온 시간, 그룹 멤버십과 같은 특성도 포함합니다.
+
+
+----
+## 자료 
+Azure Active Directory는 이제 Microsoft Entra ID라고 함
+[크래프톤 사내 커뮤니케이션](https://www.1conomynews.co.kr/news/articleView.html?idxno=24258)
+
+[AD azure 와 Spring 연동](https://learn.microsoft.com/ko-kr/azure/developer/java/spring-framework/configure-spring-boot-starter-java-app-with-azure-active-directory-b2c-oidc)
+
 
 [슬랙도 활용중](https://www.1conomynews.co.kr/news/articleView.html?idxno=24258)
 
@@ -39,32 +120,10 @@
 [크래프톤 기존 부서](https://krafton.com/%EB%B6%84%EB%A5%98%EB%90%98%EC%A7%80-%EC%95%8A%EC%9D%8C/1048-2/)
 [SPRING SSO](https://kimseungjae.tistory.com/15)
 
-메인
-메인 > 헤더
-헤더1 > 환경설정, SITEMAP, HELP, MESSENGER, 교보문고 연결 페이지들~, LOGOUT
-헤더2(메인) > 메인, 메일, 결재, 게시판, 조직도, 문서함
 
-환경설정 > (사이드) 내 정보, 암호설정, 부재설정, 그룹관리, 알림설정, 개인정보설정, 결재설정
-SITEMAP > 전체 기능 한 번에 볼 수 있게 간단히 축소해놓은 창? 느낌
-HELP > 해당 그룹웨어 시스템 도움말 링크 연동
-MESSENGER > TEAMS로 변경되면서 사라진듯 연결 X
+[AD와 Azure AD를 분리한 이유](https://toad.co.kr/it/?idx=6765744&bmode=view)
+[https://octatco.com/blog=66](https://octatco.com/blog=66)
+- 로컬 AD 와 Azure AD 동기화 작업 방법 :Azure AD Connect와 Azure AD Connect cloud sync
 
-메인 > 좌측 메뉴
-메일, 결재, e-HR 시스템, 통합회계시스템, IT서비스 데스크, 회의실 예약, Web-Fax, 설문투표, 게시판/자료실, 커뮤니티, 일정관리, Clean Desk 점검, 임직원몰 ID연동, 이름검색
+[LDAP , AD 관계](https://sunrise-min.tistory.com/entry/%ED%95%9C-%EB%B2%88%EC%AF%A4%EC%9D%80-%EB%93%A4%EC%96%B4%EB%B4%A4%EC%9D%84-AD-LDAP%EC%97%90-%EB%8C%80%ED%95%9C-%EC%A0%95%EB%A6%AC)
 
-
-메인 > 좌측 메뉴 > 메일(헤더와 기능 같음)
-메일 창 헤더 > 메일 메인, 주소록, 공지사항, 조직도, 설정, 연락처 검색
-메일은 머 다른 메일들과 크게 다를건 없다고 생각함
-
-메인 > 좌측 메뉴 > 결재(헤더의 결재와 같음)
-이 메뉴는 결재를 하는 메뉴가 아니라 결재 신청한거 대기 및 목록 조회느낌?
-
-메인 > 좌측 메뉴 > e-HR 시스템 > 결재
-여기가 진짜 결재창
-인사관리, 조직관리, 역량관리, 성과관리, 급여관리, 근태관리, 복리후생, 신청결재 등
-
-다른 좌측 메뉴는 머 이름만 봐도 알거라고 생각해서 넘어갈게유
-
-
-진짜 메인 > 배너 공지사항, 게시판, 나의 할일, 회사 다른 공지사항, 연동페이지들, 규정, 비전, 등등, 바로가기

@@ -1,0 +1,27 @@
+POST localhost:8080/users HTTP/1.1
+Content-Type: application/json
+
+{
+  "cn": "wan772",
+  "password": "wan772!!",
+  "givenName":  "wan772",
+  "name": "wan772",
+  "email":  "wan772@naver.com"
+}
+###
+GET localhost:8080/users/jkj1237/password/qkrwodhks1!
+
+###
+GET localhost:8080/users/jkj1237
+
+###
+GET localhost:8080/users
+
+###
+GET localhost:8080/users/auth?cn=jkj1237&password=test1234!
+
+###
+PATCH localhost:8080/users/jkj1238?newDisplayName=jkj123888&newEmail=wan2daaaaaa@gmail.com
+
+###
+PATCH localhost:8080/users/jkj1238/password?password=test1234!!!&newPassword=jkj1234!!!!
